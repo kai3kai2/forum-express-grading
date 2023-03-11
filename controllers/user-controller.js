@@ -40,10 +40,8 @@ const userController = {
     res.redirect('/signin')
   },
   getUser: (req, res, next) => {
-    const { id } = req.params
-
     return Promise.all([
-      User.findByPk(id, {
+      User.findByPk(req.params.id, {
         include: [
           { model: Restaurant, as: 'FavoritedRestaurants' },
           { model: User, as: 'Followings' },
