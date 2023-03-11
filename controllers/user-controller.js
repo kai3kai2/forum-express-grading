@@ -42,10 +42,14 @@ const userController = {
   getUser: (req, res, next) => {
     const { id } = req.params
 
-    if (Number(getUser(req).id) !== Number(id)) throw new Error('只能編輯自己的頁面喔!')
-
     return Promise.all([
-      User.findByPk(id),
+      User.findByPk(id, {
+        include: [
+          { model: Restaurant, as: 'FavoritedRestaurants' },
+          { model: User, as: 'Followings' },
+          { model: User, as: 'Followers' }
+        ]
+      }),
       Comment.findAll({
         where: { userId: req.params.id },
         include: Restaurant,
@@ -54,13 +58,16 @@ const userController = {
         nest: true,
         raw: true
       })
+
     ])
       .then(([user, comments]) => {
         if (!user) throw new Error('User did not exist!')
+        const isFollowed = getUser(req).Followers.some(follows => follows.id === user.id)
 
         res.render('users/profile', {
           user: user.toJSON(),
-          comments
+          comments,
+          isFollowed
         })
       })
       .catch(err => next(err))
