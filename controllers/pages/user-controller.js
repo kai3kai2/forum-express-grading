@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs')
-const { User, Comment, Restaurant, Favorite, Like, Followship } = require('../models')
-const { getUser } = require('../helpers/auth-helpers')
+const { User, Comment, Restaurant, Favorite, Like, Followship, Sequelize } = require('../../models')
+const { getUser } = require('../../helpers/auth-helpers')
 
-const { imgurFileHander } = require('../helpers/file-helpers')
+const { imgurFileHander } = require('../../helpers/file-helpers')
 
 const userController = {
   signUpPage: (req, res) => {
@@ -39,36 +39,32 @@ const userController = {
     req.logout()
     res.redirect('/signin')
   },
-  getUser: (req, res, next) => {
-    return Promise.all([
-      User.findByPk(req.params.id, {
+  getUser: async (req, res, next) => {
+    const userId = req.params.id
+    try {
+      const userData = await User.findByPk(userId, {
         include: [
-          { model: Restaurant, as: 'FavoritedRestaurants' },
-          { model: User, as: 'Followings' },
-          { model: User, as: 'Followers' }
+          { model: Restaurant, as: 'FavoritedRestaurants', attributes: ['id', 'img'] },
+          { model: User, as: 'Followings', attributes: ['id', 'image'] },
+          { model: User, as: 'Followers', attributes: ['id', 'image'] }
         ]
-      }),
-      Comment.findAll({
-        where: { userId: req.params.id },
-        include: Restaurant,
-        attributes: ['restaurant_id'],
-        group: 'restaurant_id',
+      })
+      if (!userData) throw new Error('No about this user result!')
+      const comments = await Comment.findAll({
+        where: { userId },
+        include: [{ model: Restaurant, attributes: ['id', 'img'] }],
+        attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('restaurant_id')), 'restaurantId']],
         nest: true,
         raw: true
       })
-
-    ])
-      .then(([user, comments]) => {
-        if (!user) throw new Error('User did not exist!')
-        const isFollowed = getUser(req).Followers.some(follows => follows.id === user.id)
-
-        res.render('users/profile', {
-          user: user.toJSON(),
-          comments,
-          isFollowed
-        })
-      })
-      .catch(err => next(err))
+      const user = {
+        ...userData.toJSON(),
+        isFollowed: req.user.Followings.some(following => following.id === userId)
+      }
+      res.render('users/profile', { user, comments })
+    } catch (err) {
+      next(err)
+    }
   },
   editUser: (req, res, next) => {
     const { id } = req.params

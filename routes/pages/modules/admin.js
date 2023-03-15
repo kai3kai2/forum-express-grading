@@ -1,9 +1,9 @@
 const express = require('express')
 const router = express.Router()
-const upload = require('../../middleware/multer')
+const upload = require('../../../middleware/multer')
 
-const adminController = require('../../controllers/admin-controller')
-const categoryController = require('../../controllers/category-contorller')
+const adminController = require('../../../controllers/pages/admin-controller')
+const categoryController = require('../../../controllers/pages/category-contorller')
 
 router.patch('/users/:id', adminController.patchUser)
 router.get('/users', adminController.getUsers)
