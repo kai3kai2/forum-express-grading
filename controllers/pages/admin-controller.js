@@ -1,16 +1,12 @@
 const { Restaurant, User, Category } = require('../../models')
+
+const adminServices = require('../../services/admin-services')
+
 const { imgurFileHander } = require('../../helpers/file-helpers')
 
 const adminController = {
   getRestaurants: (req, res, next) => {
-    Restaurant.findAll({
-      // 將撈出來的資料從sequelize打包形式簡化成要用到的那些資訊
-      raw: true,
-      nest: true,
-      include: [Category]
-    })
-      .then(restaurants => res.render('admin/restaurants', { restaurants }))
-      .catch(err => next(err))
+    adminServices.getRestaurants(req, (err, data) => err ? next(err) : res.render('admin/restaurants', data))
   },
   createRestaurant: (req, res, next) => {
     return Category.findAll({ raw: true })
