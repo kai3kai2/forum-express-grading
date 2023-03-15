@@ -93,15 +93,11 @@ const adminController = {
       .catch(err => next(err))
   },
   deleteRestaurant: (req, res, next) => {
-    const { id } = req.params
-    return Restaurant.findByPk(id)
-      .then(restaurant => {
-        if (!restaurant) throw new Error('Restaurant did not exists!')
-
-        return restaurant.destroy()
-      })
-      .then(() => res.redirect('/admin/restaurants'))
-      .catch(err => next(err))
+    adminServices.deleteRestaurant(req, (err, data) => {
+      if (err) return next(err)
+      req.session.deleteData = data
+      return res.redirect('/admin/restaurants')
+    })
   },
   getUsers: (req, res, next) => {
     return User.findAll({ raw: true })
