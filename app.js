@@ -18,6 +18,7 @@ const port = process.env.PORT || 3000
 const SESSION_SERECT = 'secret'
 
 app.engine('hbs', handlebars({ extname: '.hbs', helpers: handlebarsHelpers }))
+app.use(express.json())
 app.set('view engine', 'hbs')
 app.use(express.urlencoded({ extended: true }))
 app.use(session({ secret: SESSION_SERECT, resave: false, saveUninitialized: false }))
